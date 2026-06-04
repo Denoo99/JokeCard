@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 
 import "./App.css";
 import JokeCard from "./components/JokeCard";
-import StudentForm from "./components/StudentForm";
 import SavedJokes from "./components/SavedJoke";
 
 const title = "Joke Classroom";
@@ -27,17 +26,16 @@ function App() {
   //   },
   // ]
 
-  const [studentName, setStudentName] = useState("");
-  const [savedJokes, setSavedJokes] = useState([]);
+  const getLocalStorageItems = () => {
+    return JSON.parse(localStorage.getItem("savedJokes")) || [];
+  };
+
+  const [savedJokes, setSavedJokes] = useState(getLocalStorageItems);
   const [randomJoke, setRandomJoke] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const API_URL = "https://official-joke-api.appspot.com";
-
-  const handleNameChange = (event) => {
-    setStudentName(event.target.value);
-  };
 
   const handleSaveJoke = (joke) => {
     const alreadySaved = savedJokes.some(
@@ -83,21 +81,24 @@ function App() {
     handleGetRandomJoke();
   }, []);
 
-  return (
-    <div>
-      <Header title={title} subtitle="Learn React with funny jokes" />
+  useEffect(() => {
+    localStorage.setItem("savedJokes", JSON.stringify(savedJokes));
+  }, [savedJokes]);
 
-      <StudentForm
-        studentName={studentName}
-        handleNameChange={handleNameChange}
-      />
+  const isRandomJokeSaved =
+    randomJoke &&
+    savedJokes.some((savedJoke) => savedJoke.id === randomJoke.id);
+
+  return (
+    <div className="app">
+      <Header title={title} subtitle="Learn React with funny jokes" />
 
       <button disabled={loading} onClick={handleGetRandomJoke}>
         {loading ? "Loading..." : "Get random joke"}
       </button>
 
       {loading && <p>Loading...</p>}
-      {error && <p>{error}</p>}
+      {error && <p className="error">{error}</p>}
 
       {/* {jokes.map((joke) => {
         const isSaved = savedJokes.some(
@@ -130,9 +131,7 @@ function App() {
           setup={randomJoke.setup}
           punchline={randomJoke.punchline}
           saveJoke={() => handleSaveJoke(randomJoke)}
-          isSaved={savedJokes.some(
-            (savedJoke) => savedJoke.id === randomJoke.id,
-          )}
+          isSaved={isRandomJokeSaved}
         />
       )}
 
